@@ -70,33 +70,40 @@
     </div>
 
     <script>
-      // Supabase envoie les infos soit dans le ?query soit dans le #fragment
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash ? hash : window.location.search);
+      function getParams() {
+        // On récupère les paramètres après le ? (search) et après le # (hash)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1),
+        );
 
-      // Le type peut être 'recovery', 'signup', ou 'invite'
-      const type = params.get("type");
+        return {
+          code: urlParams.get("code") || hashParams.get("code"),
+          type: urlParams.get("type") || hashParams.get("type"),
+        };
+      }
+
+      const params = getParams();
       const content = document.getElementById("content");
 
-      if (type === "recovery") {
+      // LOGIQUE : Si on a un "code" ou si le type est "recovery", on affiche le reset
+      if (params.code || params.type === "recovery") {
         content.innerHTML = `
             <h1>Nouveau mot de passe</h1>
-            <p>Saisis ton nouveau mot de passe pour Alatinsa.</p>
-            <input type="password" id="new_password" placeholder="Nouveau mot de passe">
-            <button class="btn" onclick="updatePassword()">Mettre à jour</button>
-        `;
-      } else if (type === "signup") {
-        content.innerHTML = `
-            <h1>Compte Vérifié !</h1>
-            <p>Ton compte Alatinsa est désormais actif. Tu peux retourner dans l'application.</p>
+            <p>Un code de sécurité a été détecté. Tu peux maintenant choisir un nouveau mot de passe pour Alatinsa.</p>
+            <div style="margin-top: 20px;">
+                <input type="password" id="new_password" placeholder="Minimum 6 caractères" 
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box;">
+                <button class="btn" onclick="updatePassword()">Mettre à jour le mot de passe</button>
+            </div>
         `;
       } else {
-        // Si on arrive ici sans type précis, on affiche un message neutre
         content.innerHTML = `
-            <h1>Alatinsa</h1>
-            <p>Bienvenue sur la plateforme. Redirection vers l'application...</p>
+            <h1>Compte Vérifié !</h1>
+            <p>Merci Maëlys, ton compte est désormais actif. Tu peux retourner dans l'application.</p>
         `;
-      }
+       } 
+      
 
       function updatePassword() {
         const pass = document.getElementById("new_password").value;
@@ -104,8 +111,9 @@
           alert("Le mot de passe doit faire au moins 6 caractères.");
           return;
         }
+        // Simulation de succès pour ton test local
         alert(
-          "Succès ! Ton mot de passe a été modifié.\nRetourne dans l'application Alatinsa pour te connecter.",
+          "Succès ! Ton mot de passe a été modifié.\nRedirige-toi maintenant vers l'application Alatinsa pour te connecter.",
         );
       }
     </script>
