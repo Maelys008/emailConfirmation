@@ -62,13 +62,9 @@
     </div>
 
     <script>
-      // On attend que la page soit prête
       window.onload = async function () {
         const SUPABASE_URL = "https://lfgnxrgxnuhxekimohfs.supabase.co";
-        const SUPABASE_ANON_KEY = "TA_CLE_ANON_ICI";
-
-        // CHANGEMENT ICI : on utilise "supabaseClient" au lieu de "supabase"
-        // car le mot "supabase" est déjà réservé par la bibliothèque importée
+        const SUPABASE_ANON_KEY = "sb_publishable_nwJhP0E7PpNWIMU5cf8Hgw_N1AErrBg";
         const supabaseClient = supabase.createClient(
           SUPABASE_URL,
           SUPABASE_ANON_KEY,
@@ -76,6 +72,12 @@
 
         const params = getParams();
         const content = document.getElementById("content");
+
+        // 1. Si on a un code dans l'URL, on doit l'échanger contre une session
+        if (params.code) {
+          console.log("Code détecté, tentative d'échange...");
+          await supabaseClient.auth.exchangeCodeForSession(params.code);
+        }
 
         if (params.code || params.type === "recovery") {
           content.innerHTML = `
@@ -88,7 +90,6 @@
           </div>
       `;
 
-          // On attache l'événement au bouton
           document.getElementById("submit_btn").onclick = async function () {
             const passwordInput = document.getElementById("new_password");
             const statusMessage = document.getElementById("status_message");
@@ -102,7 +103,8 @@
             this.disabled = true;
             statusMessage.innerText = "Mise à jour en cours...";
 
-            // Utilisation de supabaseClient ici aussi
+            // 2. Maintenant que la session est établie grâce à exchangeCodeForSession,
+            // l'update va fonctionner
             const { error } = await supabaseClient.auth.updateUser({
               password: newPassword,
             });
@@ -114,7 +116,7 @@
               content.innerHTML = `
             <h1>Succès !</h1>
             <p style="color: #2e7d32; font-weight: bold;">Ton mot de passe a été modifié.</p>
-            <p>Redirige-toi maintenant vers l'application <strong>Alatinsa</strong>.</p>
+            <p>Redirige-toi maintenant vers l'application <strong>Alatinsa</strong> pour te connecter.</p>
           `;
             }
           };
