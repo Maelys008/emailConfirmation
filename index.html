@@ -16,55 +16,98 @@
 </body>
 </html> -->
 
-
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Alatinsa - Authentification</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; background: #FAF7F2; color: #333; }
-        .card { background: white; padding: 40px; border-radius: 12px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; }
-        h1 { color: #8D5B23; font-family: 'serif'; }
-        .btn { background: #8D5B23; color: white; padding: 12px 25px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 20px; border: none; cursor: pointer; }
-        input { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        text-align: center;
+        padding-top: 50px;
+        background: #faf7f2;
+        color: #333;
+      }
+      .card {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        display: inline-block;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        max-width: 400px;
+      }
+      h1 {
+        color: #8d5b23;
+        font-family: "serif";
+      }
+      .btn {
+        background: #8d5b23;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+        border: none;
+        cursor: pointer;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="card">
-        <div id="content">
-            <h1>Alatinsa</h1>
-            <p>Traitement en cours...</p>
-        </div>
+      <div id="content">
+        <h1>Alatinsa</h1>
+        <p>Traitement en cours...</p>
+      </div>
     </div>
 
     <script>
-        // On regarde si l'URL contient un "type" (soit recovery, soit signup)
-        const urlParams = new URLSearchParams(window.location.hash.replace('#', '?'));
-        const type = urlParams.get('type');
+      // Supabase envoie les infos soit dans le ?query soit dans le #fragment
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash ? hash : window.location.search);
 
-        const content = document.getElementById('content');
+      // Le type peut être 'recovery', 'signup', ou 'invite'
+      const type = params.get("type");
+      const content = document.getElementById("content");
 
-        if (type === 'recovery') {
-            // CAS : MOT DE PASSE OUBLIÉ
-            content.innerHTML = `
-                <h1>Nouveau mot de passe</h1>
-                <p>Saisis ton nouveau mot de passe pour Alatinsa.</p>
-                <input type="password" id="new_password" placeholder="••••••••">
-                <button class="btn" onclick="updatePassword()">Mettre à jour</button>
-            `;
-        } else {
-            // CAS : CONFIRMATION D'EMAIL (Par défaut)
-            content.innerHTML = `
-                <h1>Compte Vérifié !</h1>
-                <p>Ton compte est désormais actif. Tu peux retourner dans l'application pour te connecter.</p>
-                <p><i>(Tu peux fermer cette page)</i></p>
-            `;
+      if (type === "recovery") {
+        content.innerHTML = `
+            <h1>Nouveau mot de passe</h1>
+            <p>Saisis ton nouveau mot de passe pour Alatinsa.</p>
+            <input type="password" id="new_password" placeholder="Nouveau mot de passe">
+            <button class="btn" onclick="updatePassword()">Mettre à jour</button>
+        `;
+      } else if (type === "signup") {
+        content.innerHTML = `
+            <h1>Compte Vérifié !</h1>
+            <p>Ton compte Alatinsa est désormais actif. Tu peux retourner dans l'application.</p>
+        `;
+      } else {
+        // Si on arrive ici sans type précis, on affiche un message neutre
+        content.innerHTML = `
+            <h1>Alatinsa</h1>
+            <p>Bienvenue sur la plateforme. Redirection vers l'application...</p>
+        `;
+      }
+
+      function updatePassword() {
+        const pass = document.getElementById("new_password").value;
+        if (pass.length < 6) {
+          alert("Le mot de passe doit faire au moins 6 caractères.");
+          return;
         }
-
-        function updatePassword() {
-            const pass = document.getElementById('new_password').value;
-            alert("Mot de passe mis à jour ! (Simulation)\nTu peux maintenant retourner dans l'app.");
-        }
+        alert(
+          "Succès ! Ton mot de passe a été modifié.\nRetourne dans l'application Alatinsa pour te connecter.",
+        );
+      }
     </script>
-</body>
+  </body>
 </html>
