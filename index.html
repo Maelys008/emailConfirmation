@@ -1,64 +1,16 @@
-<!-- <!DOCTYPE html>
-<html>
-<head>
-    <title>Alatinsa - Confirmation</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; background: #FAF7F2; }
-        .card { background: white; padding: 40px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #8D5B23; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Email Vérifié !</h1>
-        <p>Tu peux retourner sur l'application pour te connecter.</p>
-    </div>
-</body>
-</html> -->
-
 <!doctype html>
 <html>
   <head>
     <title>Alatinsa - Authentification</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-      body {
-        font-family: "Segoe UI", sans-serif;
-        text-align: center;
-        padding-top: 50px;
-        background: #faf7f2;
-        color: #333;
-      }
-      .card {
-        background: white;
-        padding: 40px;
-        border-radius: 12px;
-        display: inline-block;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        max-width: 400px;
-      }
-      h1 {
-        color: #8d5b23;
-        font-family: "serif";
-      }
-      .btn {
-        background: #8d5b23;
-        color: white;
-        padding: 12px 25px;
-        border-radius: 4px;
-        text-decoration: none;
-        display: inline-block;
-        margin-top: 20px;
-        border: none;
-        cursor: pointer;
-      }
-      input {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-sizing: border-box;
-      }
+      body { font-family: "Segoe UI", sans-serif; text-align: center; padding-top: 50px; background: #faf7f2; color: #333; }
+      .card { background: white; padding: 40px; border-radius: 12px; display: inline-block; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); max-width: 400px; }
+      h1 { color: #8d5b23; font-family: "serif"; }
+      .btn { background: #8d5b23; color: white; padding: 12px 25px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 20px; border: none; cursor: pointer; }
+      .btn:disabled { background: #ccc; cursor: not-allowed; }
+      input { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+      .success-text { color: #2e7d32; font-weight: bold; margin-top: 20px; }
     </style>
   </head>
   <body>
@@ -70,13 +22,16 @@
     </div>
 
     <script>
-      function getParams() {
-        // On récupère les paramètres après le ? (search) et après le # (hash)
-        const urlParams = new URLSearchParams(window.location.search);
-        const hashParams = new URLSearchParams(
-          window.location.hash.substring(1),
-        );
+      // CONFIGURATION SUPABASE 
 
+     
+      const SUPABASE_URL = 'https://lfgnxrgxnuhxekimohfs.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_nwJhP0E7PpNWIMU5cf8Hgw_N1AErrBg'; 
+      const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      function getParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
         return {
           code: urlParams.get("code") || hashParams.get("code"),
           type: urlParams.get("type") || hashParams.get("type"),
@@ -86,15 +41,14 @@
       const params = getParams();
       const content = document.getElementById("content");
 
-      // LOGIQUE : Si on a un "code" ou si le type est "recovery", on affiche le reset
       if (params.code || params.type === "recovery") {
         content.innerHTML = `
             <h1>Nouveau mot de passe</h1>
-            <p>Un code de sécurité a été détecté. Tu peux maintenant choisir un nouveau mot de passe pour Alatinsa.</p>
+            <p>Choisis ton nouveau mot de passe pour Alatinsa.</p>
             <div style="margin-top: 20px;">
-                <input type="password" id="new_password" placeholder="Minimum 6 caractères" 
-                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box;">
-                <button class="btn" onclick="updatePassword()">Mettre à jour le mot de passe</button>
+                <input type="password" id="new_password" placeholder="Minimum 6 caractères">
+                <button id="submit_btn" class="btn" onclick="updatePassword()">Mettre à jour le mot de passe</button>
+                <div id="status_message"></div>
             </div>
         `;
       } else {
@@ -102,19 +56,36 @@
             <h1>Compte Vérifié !</h1>
             <p>Merci Maëlys, ton compte est désormais actif. Tu peux retourner dans l'application.</p>
         `;
-       } 
-      
+      }
 
-      function updatePassword() {
-        const pass = document.getElementById("new_password").value;
-        if (pass.length < 6) {
+      async function updatePassword() {
+        const passwordInput = document.getElementById("new_password");
+        const submitBtn = document.getElementById("submit_btn");
+        const statusMessage = document.getElementById("status_message");
+        const newPassword = passwordInput.value;
+
+        if (newPassword.length < 6) {
           alert("Le mot de passe doit faire au moins 6 caractères.");
           return;
         }
-        // Simulation de succès pour ton test local
-        alert(
-          "Succès ! Ton mot de passe a été modifié.\nRedirige-toi maintenant vers l'application Alatinsa pour te connecter.",
-        );
+
+        submitBtn.disabled = true;
+        statusMessage.innerText = "Mise à jour en cours...";
+
+        // C'est ici que la magie opère : on met à jour le mot de passe chez Supabase
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+        if (error) {
+          statusMessage.innerHTML = `<p style="color:red">Erreur : ${error.message}</p>`;
+          submitBtn.disabled = false;
+        } else {
+          // On remplace le contenu de la carte par le message de succès final
+          content.innerHTML = `
+            <h1>Succès !</h1>
+            <p class="success-text">Ton mot de passe a été modifié.</p>
+            <p>Redirige-toi maintenant vers l'application <strong>Alatinsa</strong> pour te connecter.</p>
+          `;
+        }
       }
     </script>
   </body>
